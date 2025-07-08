@@ -3,7 +3,11 @@ import pino from 'pino-http';
 import cors from 'cors';
 
 import { getEnvVar } from './utils/getEnvVar.js';
-import { getAllContacts, getContactById } from './services/contacts.js';
+
+import contactsRouter from './routes/contacts.js';
+import { notFoundHandler } from './middlewares/notFoundHandler.js';
+import { errorHandler } from './middlewares/errorHandler.js';
+// import { getAllContacts, getContactById } from './services/contacts.js';
 
 const PORT = getEnvVar('PORT');
 
@@ -25,36 +29,36 @@ export const setupServer = () => {
     });
   });
 
-  app.get('/contacts', async (req, res) => {
-    const contacts = await getAllContacts();
-    res.json({
-      status: 200,
-      message: 'Successfully found contacts!',
-      data: contacts,
-    });
-  });
+  app.use(contactsRouter);
 
-  app.get('/contacts/:id', async (req, res) => {
-    const { id } = req.params;
-    const contact = await getContactById(id);
-    if (!contact) {
-      res.status(404).json({
-        message: 'Contact not found',
-      });
-      return;
-    }
-    res.json({
-      status: 200,
-      message: `Successfully found contact with id: ${id}!`,
-      data: contact,
-    });
-  });
+  // app.get('/contacts', async (req, res) => {
+  //   const contacts = await getAllContacts();
+  //   res.json({
+  //     status: 200,
+  //     message: 'Successfully found contacts!',
+  //     data: contacts,
+  //   });
+  // });
 
-  app.use('', (req, res) => {
-    res.status(404).json({
-      message: 'Not found',
-    });
-  });
+  // app.get('/contacts/:id', async (req, res) => {
+  //   const { id } = req.params;
+  //   const contact = await getContactById(id);
+  //   if (!contact) {
+  //     res.status(404).json({
+  //       message: 'Contact not found',
+  //     });
+  //     return;
+  //   }
+  //   res.json({
+  //     status: 200,
+  //     message: `Successfully found contact with id: ${id}!`,
+  //     data: contact,
+  //   });
+  // });
+
+  app.use('', notFoundHandler);
+
+  app.use(errorHandler);
 
   app.listen(PORT, (error) => {
     if (error) {
